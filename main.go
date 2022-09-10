@@ -44,8 +44,7 @@ func convertMonth(s string) string {
 
 //判断行中是否包含calendar_time
 func haveCalendarTime(s string) bool {
-	isTrue := strings.Contains(s, "calendar_time")
-	return isTrue
+	return strings.Contains(s, "calendar_time")
 }
 
 //读取txt
