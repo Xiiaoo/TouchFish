@@ -1,3 +1,3 @@
 adb pull /sdcard/info.txt
-go run main.go
+main.exe
 pause
