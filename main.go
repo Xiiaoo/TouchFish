@@ -4,11 +4,13 @@ import (
 	"bufio"
 	"fmt"
 	"io"
-	"os"
 	"math/rand"
+	"os"
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/atotto/clipboard"
 )
 
 func convertMonth(s string) string {
@@ -72,25 +74,31 @@ func readTxt(r io.Reader) ([]string, error) {
 	return result, nil
 }
 
-func printResult() {
+func printResult() string {
 	f, err := os.Open("info.txt")
 	if err != nil {
 		fmt.Println("err:", err)
-		return
+		return err.Error()
 	}
 	defer f.Close()
 	content, err := readTxt(f)
 	if err != nil {
 		fmt.Println("err:", err)
-		return
+		return err.Error()
 	}
-	fmt.Println("开始时间：", content[0])
-	fmt.Println("结束时间：", content[1])
+	return "开始时间：" + content[0] + "\n结束时间：" + content[1]
 }
 
-func printRand() {
-	start_time := time.Now().AddDate(0, 0, -1)
-
+func printRand() string {
+	var start_time time.Time
+	var end_time time.Time
+	if time.Now().Weekday().String() != "Monday" {
+		start_time = time.Now().AddDate(0, 0, -1)
+		end_time = time.Now()
+	} else {
+		start_time = time.Now().AddDate(0, 0, -2)
+		end_time = time.Now().AddDate(0, 0, -1)
+	}
 	start_year := strconv.Itoa(start_time.Year())
 	start_month := convertMonth(start_time.Month().String())
 	start_day := strconv.Itoa(start_time.Day())
@@ -103,26 +111,27 @@ func printRand() {
 
 	s_ymd_hmsms := start_year + "-" + start_month + "-" + start_day + " " + strconv.Itoa(start_hour) + ":" + strconv.Itoa(start_minute) + ":" + strconv.Itoa(start_second) + "." + strconv.Itoa(start_msecond)
 
-	fmt.Println("开始时间：", s_ymd_hmsms)
-
 	end_month := convertMonth(time.Now().Month().String())
 	end_hour := start_hour - 13
 	end_minute := rand.Intn(49) + 10
 	end_second := rand.Intn(49) + 10
 	end_msecond := rand.Intn(889) + 100
 
-	e_ymd_hmsms := strconv.Itoa(time.Now().Year()) + "-" + end_month + "-" + strconv.Itoa(time.Now().Day()) + " " + "0" + strconv.Itoa(end_hour) + ":" + strconv.Itoa(end_minute) + ":" + strconv.Itoa(end_second) + "." + strconv.Itoa(end_msecond)
+	e_ymd_hmsms := strconv.Itoa(time.Now().Year()) + "-" + end_month + "-" + strconv.Itoa(end_time.Day()) + " " + "0" + strconv.Itoa(end_hour) + ":" + strconv.Itoa(end_minute) + ":" + strconv.Itoa(end_second) + "." + strconv.Itoa(end_msecond)
 
-	fmt.Println("结束时间：", e_ymd_hmsms)
+	result := "开始时间：" + s_ymd_hmsms + "\n结束时间：" + e_ymd_hmsms
+
+	return result
 }
 
 func main() {
-	fmt.Println("========================")
-	fmt.Println("以下为随机生成的虚拟时间:")
-	printRand()
-	fmt.Println("========================")
-	fmt.Println("以下为读取TXT生成的实际的时间:")
-	fmt.Println("需要TXT与BAT在同一目录下!")
-	printResult()
-	fmt.Println("========================")
+	var output string
+	if printResult() == "open info.txt: The system cannot find the file specified." {
+		fmt.Println("随机生成的时间已粘贴到剪切板！")
+		output = printRand()
+	} else {
+		fmt.Println("实际读取的时间已粘贴到剪切板！")
+		output = printResult()
+	}
+	clipboard.WriteAll(output)
 }
